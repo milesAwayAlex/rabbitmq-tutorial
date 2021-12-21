@@ -1,4 +1,5 @@
 const amqp = require('amqplib/callback_api');
+const msg = process.argv[2] || 'Hello World!';
 
 amqp.connect('amqp://localhost', (error0, connection) => {
   if (error0) throw error0;
@@ -8,13 +9,12 @@ amqp.connect('amqp://localhost', (error0, connection) => {
 
     channel.assertQueue(queue, { durable: false });
 
-    console.log(` [*] Waiting for messages in '${queue}'...`);
-    channel.consume(
-      queue,
-      (msg) => {
-        console.log(' [x] Received', msg.content.toString());
-      },
-      { noAck: true }
-    );
+    channel.sendToQueue(queue, Buffer.from(msg));
+    console.log(' [x] Sent', msg);
+
+    setTimeout(() => {
+      connection.close();
+      process.exit(0);
+    }, 666);
   });
 });
